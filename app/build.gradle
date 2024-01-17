@@ -1,0 +1,59 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'net.pgaskin.ssh.sk.provider.gms'
+    compileSdk 33
+    defaultConfig {
+        // so we have a single dex file (note: gms:play-services-fido doesn't pull in any resources we actually need at runtime)
+        multiDexEnabled false
+        // this won't actually change anything since we load the dex within termux
+        applicationId 'net.pgaskin.ssh.sk.provider.gms'
+        minSdk 25
+        //noinspection ExpiredTargetSdkVersion
+        targetSdk 28
+        versionCode 1
+        versionName '1'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-fido:20.1.0'
+}
+
+tasks.register('assembleDebugProvider', Tar) {
+    dependsOn mergeDexDebug
+    dependsOn mergeDebugNativeLibs
+    archiveBaseName = 'provider-debug'
+    destinationDirectory = file("$buildDir/outputs/provider/debug")
+    from(tasks.named('mergeDexDebug').get().outputs.files.singleFile) {
+        rename '.*', 'libssh-sk-provider-gms.dex'
+    }
+    from(tasks.named('mergeDebugNativeLibs').get().outputs.files.asFileTree) // lib/*/libssh-sk-provider-gms.so
+}
+
+tasks.register('assembleReleaseProvider', Tar) {
+    dependsOn mergeDexRelease
+    dependsOn mergeReleaseNativeLibs
+    archiveBaseName = 'provider-release'
+    destinationDirectory = file("$buildDir/outputs/provider/release")
+    from(tasks.named('mergeDexRelease').get().outputs.files.singleFile) {
+        rename '.*', 'libssh-sk-provider-gms.dex'
+    }
+    from(tasks.named('mergeReleaseNativeLibs').get().outputs.files.asFileTree) // lib/*/libssh-sk-provider-gms.so
+}
