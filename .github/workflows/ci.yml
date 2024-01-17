@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  app:
+    name: App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: gradle
+      - run: ./gradlew app:assembleDebugProvider
+      - uses: actions/upload-artifact@v3
+        with:
+          name: provider-debug
+          path: app/build/outputs/provider/debug/provider-debug.tar
